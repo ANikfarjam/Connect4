@@ -1,19 +1,91 @@
-class UtilityAgent:
-    def __init__(self, board, Player, Agent):
-        self.board = board 
-        self.player = Player #state of players pieces
-        self.agent =Agent #state od Agent pieces
+#minimax and util function
+import Connect4GameBK
+import math
+import numpy as np
+import random
+def minimax(board, depth, alpha, beta, maximizingPlayer):
+    AI_Peace = 0
+    Player_Peace = 1
+    valid_locations = []
+    for col in board.shape[1]:
+        valid_locations.append(Connect4GameBK.get_next_open_row(board, col), col)
+        is_terminal = Connect4GameBK.game_over
+
+    # Base case: If the depth is zero or the game is over, return the current board's score.
+    if depth == 0 or is_terminal:
+        if is_terminal:
+            if Connect4GameBK.winning_move(board, AI_Peace): #ai peace is 0 
+                return (None, math.inf)
+            elif Connect4GameBK.winning_move(board, Player_Peace):#played peace
+                return (None, -math.inf)
+            else: # Game is over, no more valid moves
+                return (None, 0)
+        else: # Depth is zero
+            return (None, util_function(board, AI_Peace))
+
+    # Maximize the score if it's the maximizing player's turn
+    if maximizingPlayer:
+        value = -math.inf
+        column = random.choice(valid_locations)
+        for col in valid_locations:
+            row = Connect4GameBK.get_next_open_row(board, col)
+            b_copy = board.copy()
+            Connect4GameBK.drop_piece(b_copy, row, col, 0)
+            new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
+
+            # Update the best move and alpha value.
+            if new_score > value:
+                value = new_score
+                column = col
+            alpha = max(alpha, value)
+
+            # Prune the search if the alpha value is greater than or equal to beta.
+            if alpha >= beta:
+                break
+        return column, value
+
+    else: # Minimize the score if it's the minimizing player's turn.
+        value = math.inf
+        column = random.choice(valid_locations)
+        for col in valid_locations:
+            row = Connect4GameBK.get_next_open_row(board, col)
+            b_copy = board.copy()
+            Connect4GameBK.drop_piece(b_copy, row, col, Player_Peace)
+            new_score = minimax(b_copy, depth-1, alpha, beta, True)[1]
+
+            # Update the best move and beta value.
+            if new_score < value:
+                value = new_score
+                column = col
+            beta = min(beta, value)
+
+            # Prune the search if the alpha value is greater than or equal to beta
+            if alpha >= beta:
+                break
+        return column, value
     
-class Node:
-    def __init__(self, value = None, childeren=[]):
-        self.max_value = value
-        self.child = childeren
-    def add_Node(self, Node):
-        self.child.append(Node)
-    def get_value(self):
-        return self.max_value
-def apha_beta_search(board, depth_limit, ):
-    pass
-def construct_tree(board):#new board state/return index of witch column we add the next peace
-    pass
+# Function to score the position of a game board for a given player.
+def util_function(board, piece):
+    score = 0
+    opponent_piece = 1
+
+    # Evaluation board for scoring positions on the actual game board.
+
+    # TODO: Fill in values for this board. Give higher values to the positions that you think
+    # lead to more wins, and lower values to the positions you think can result in less winning combinations.
+    evaluation_board = np.array([[0, 0, 0, 0, 0, 0, 0],
+                                 [0, 0, 0, 0, 0, 0, 0],
+                                 [0, 0, 0, 0, 0, 0, 0],
+                                 [0, 0, 0, 0, 0, 0, 0],
+                                 [0, 0, 0, 0, 0, 0, 0],
+                                 [0, 0, 0, 0, 0, 0, 0]])
+
+
+    # Calculate scores for the given player's and opponent's pieces on the board.
+    piece_score = np.sum(evaluation_board[board == piece])
+    opponent_score = np.sum(evaluation_board[board == opponent_piece])
+
+    # Calculate the final score by subtracting the opponent's score from the player's score.
+    score = piece_score - opponent_score
+    return score
 
